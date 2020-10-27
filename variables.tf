@@ -42,3 +42,19 @@ variable "cpu_usage_threshold_warning" {
   description = "Virtual Machine CPU usage in percent (warning threshold)"
   default     = "80"
 }
+
+variable "evaluation_delay" {
+  description = "Delay in seconds for the metric evaluation"
+  default     = 360
+}
+
+variable "new_host_delay" {
+  description = "Delay in seconds before monitor new resource"
+  default     = 300
+}
+
+variable "cpu_usage_extra_tags" {
+  description = "Extra tags for Virtual Machine status monitor"
+  type        = list(string)
+  default     = []
+}
