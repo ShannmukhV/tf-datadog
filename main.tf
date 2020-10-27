@@ -1,13 +1,6 @@
 ############
 # providers #
 ###########
-/*
-provider "azurerm" {
-  version = ">=2.0.0"
-  features {}
-  subscription_id = var.subscription_id
-}
-*/
 terraform {
   required_version = ">=0.13"
 
@@ -32,49 +25,34 @@ provider "azurerm" {
   app_key = var.datadog_app_key
 }
 
-
-
 # Create a new datadog monitor
 resource "datadog_monitor" "virtualmachine_cpu_usage" {
-  name               = var.service_name
+  name               = "Bytes received on host0"
   type               = "metric alert"
-  message            = "Monitor triggered. Notify: ${var.service_name}"
-  escalation_message = "Escalation message for ${var.service_name}"
+  message            ="Test to create metric alert for a VM" 
+ 
+  query = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
 
- # query = "avgsystem.load.1{service:${var.service_name}} by {host}"
-
-query = <<EOQ
-    ${var.cpu_usage_time_aggregator}(${var.cpu_usage_timeframe}): (
-      avg:azure.vm.percentage_cpu by {app-adtest-sandbox-useast2,eastus2,app-adtest-vm}
-    ) > ${var.cpu_usage_threshold_critical}
-EOQ
-
-/*
   thresholds = {
-    ok                = 0
-    warning           = 50
-    warning_recovery  = 1
-    critical          = 80
-    critical_recovery = 3
+            critical = 100
+            warning  =80
+            critical_recovery = 70
+            warning_recovery = 50
+
   }
-*/
-  thresholds = {
-    critical = var.cpu_usage_threshold_critical
-    warning  = var.cpu_usage_threshold_warning
-  }
+  evaluation_delay    = var.evaluation_delay
+  new_host_delay      = var.new_host_delay
+  notify_no_data      = false
+  renotify_interval   = 0
+  notify_audit        = false
+  timeout_h           = 0
+  include_tags        = true
+  locked              = false
+  require_full_window = false
 
+  tags = concat(["env:${var.environment}", "type:cloud", "provider:azure", "resource:virtualmachine", "created-by:terraform"], var.cpu_usage_extra_tags)
 
-  notify_no_data    = false
-  renotify_interval = 60
-
-  notify_audit = false
-  timeout_h    = 60
-  include_tags = true
-
-  # ignore any changes in silenced value; using silenced is deprecated in favor of downtimes
   lifecycle {
     ignore_changes = [silenced]
   }
-
-  tags = concat(["service:${var.service_name}", "environment:${var.environment}", "resource:virtualmachine"])
 }
